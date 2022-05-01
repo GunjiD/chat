@@ -20,6 +20,8 @@
 #include <sysexits.h>
 #include <unistd.h>
 
+void sendRecvLoop(int acc);
+
 // todo: シグナルの捕捉を追加する
 int serverSocket(const char *portnm) {
   char nbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
@@ -105,10 +107,76 @@ void acceptLoop(int soc) {
                   sizeof(sbuf), NI_NUMERICHOST | NI_NUMERICSERV);
       fprintf(stderr, "accept:%s:%s\n", hbuf, sbuf);
       //送受信ループ
-      send_recv_loop(acc);
+      sendRecvLoop(acc);
       // アクセプトソケットクローズ
       close(soc);
       acc = 0;
+    }
+  }
+}
+
+size_t mystrlcat(char *dst, const char *src, size_t size) {
+  const char *ps;
+  char *pd, *pde;
+  size_t dlen, lest;
+
+  for (pd = dst, lest = size; *pd != '\0' && lest != 0; pd++, lest--)
+    ;
+
+  dlen = pd - dst;
+  if (size - dlen == 0) {
+    return (dlen + strlen(src));
+  }
+  pde = dst + size - 1;
+  for (ps = src; *ps != '\0' && pd < pde; pd++, ps++) {
+    *pd = *ps;
+  }
+  for (; pd <= pde; pd++) {
+    *pd = '\0';
+  }
+  while (*ps++)
+    ;
+  return (dlen + (ps - src - 1));
+}
+
+void sendRecvLoop(int acc) {
+  char buf[512], *ptr;
+  ssize_t len;
+  for (;;) {
+    // 受信
+    len = recv(acc, buf, sizeof(buf), 0);
+    if (len == -1) {
+      // エラー
+      perror("recv");
+      break;
+    }
+    if (len == 0) {
+      // エンド・オブ・ファイル
+      fprintf(stderr, "recv:EOF\n");
+      break;
+    }
+    // 文字列化・表示
+    buf[len] = '\0';
+    ptr = strpbrk(buf, "\r\n");
+    if (ptr != nullptr) {
+      *ptr = '\0';
+    }
+    fprintf(stderr, "[client]%s\n", buf);
+
+    /***
+        応答文字列作成
+        一般的な入門書では strcat()
+    が使われるが、バッファサイズが指定できないためバッファオーバーランのバグが起きやすい
+        そのため自作関数でバッファサイズを超える場合はコピーしないようにしている
+    ***/
+    mystrlcat(buf, ":OK\r\n", sizeof(buf));
+    len = strlen(buf);
+    // 応答
+    len = send(acc, buf, len, 0);
+    if (len == -1) {
+      // エラー
+      perror("send");
+      break;
     }
   }
 }
