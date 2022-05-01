@@ -181,4 +181,26 @@ void sendRecvLoop(int acc) {
   }
 }
 
-int main() {}
+int main(int argc, char *argv[]) {
+  int soc;
+  // 引数にポート番号が指定されているか
+  if (argc <= 1) {
+    fprintf(stderr, "server port\n");
+    return EX_USAGE;
+  }
+  // サーバーソケットの準備
+  soc = serverSocket(argv[1]);
+  if (soc == -1) {
+    fprintf(stderr, "serverSocket(%s):error\n", argv[1]);
+    return EX_UNAVAILABLE;
+  }
+  fprintf(stderr, "ready for accept\n");
+  /***
+      アクセプトループ
+      Ctl + C などで割り込まない限りはループが止まらないので close しない
+  ***/
+  acceptLoop(soc);
+  // ソケットクローズ
+  close(soc);
+  return EX_OK;
+}
