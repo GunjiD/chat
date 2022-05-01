@@ -1,3 +1,4 @@
+#include <asm-generic/errno-base.h>
 #include <asm-generic/socket.h>
 #include <cstddef>
 #include <cstdio>
@@ -85,6 +86,31 @@ int serverSocket(const char *portnm) {
   return soc;
 }
 
-void acceptLoop(int soc) {}
+// アクセプトループ
+void acceptLoop(int soc) {
+  char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
+  struct sockaddr_storage from;
+  int acc;
+  socklen_t len;
+  while (1) {
+    len = sizeof(from);
+    // 接続受付
+    acc = accept(soc, (struct sockaddr *)&from, &len);
+    if (acc == -1) {
+      if (errno != EINTR) {
+        perror("accept");
+      }
+    } else {
+      getnameinfo((struct sockaddr *)&from, len, hbuf, sizeof(hbuf), sbuf,
+                  sizeof(sbuf), NI_NUMERICHOST | NI_NUMERICSERV);
+      fprintf(stderr, "accept:%s:%s\n", hbuf, sbuf);
+      //送受信ループ
+      send_recv_loop(acc);
+      // アクセプトソケットクローズ
+      close(soc);
+      acc = 0;
+    }
+  }
+}
 
 int main() {}
