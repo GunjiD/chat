@@ -95,7 +95,7 @@ void acceptLoop(int soc) {
   int acc;
   socklen_t len;
   while (1) {
-    len = sizeof(from);
+    len = (socklen_t)sizeof(from);
     // 接続受付
     acc = accept(soc, (struct sockaddr *)&from, &len);
     if (acc == -1) {
@@ -109,7 +109,7 @@ void acceptLoop(int soc) {
       //送受信ループ
       sendRecvLoop(acc);
       // アクセプトソケットクローズ
-      close(soc);
+      close(acc);
       acc = 0;
     }
   }
