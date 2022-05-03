@@ -144,3 +144,24 @@ void sendRecvLoop(int soc) {
     }
   }
 }
+
+int main(int argc, char *argv[]) {
+  int soc;
+  // 引数にホスト名、ポート番号が指定されているか
+  // argv[0] にはパス名が入っているので引数は3つになる
+  if (argc <= 2) {
+    fprintf(stderr, "client server-host port\n");
+    return EX_USAGE;
+  }
+  // サーバーにソケット接続
+  soc = clientSocket(argv[1], argv[2]);
+  if (soc == -1) {
+    fprintf(stderr, "clientSocket():error\n");
+    return EX_UNAVAILABLE;
+  }
+  // 送信処理
+  sendRecvLoop(soc);
+  // ソケットクローズ
+  close(soc);
+  return EX_OK;
+}
