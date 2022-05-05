@@ -3,11 +3,14 @@
 #include <cstddef>
 #include <cstdio>
 #include <fstream>
+#include <iterator>
 #include <ostream>
+#include <stdexcept>
 #include <string>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/ucontext.h>
 #include <sys/wait.h>
 
 #include <arpa/inet.h>
@@ -24,6 +27,7 @@
 #include <unistd.h>
 
 void sendRecvLoop(int acc);
+std::string api(const char *name);
 
 // todo: シグナルの捕捉を追加する
 int serverSocket(const char *portnm) {
@@ -145,6 +149,8 @@ size_t mystrlcat(char *dst, const char *src, size_t size) {
 void sendRecvLoop(int acc) {
   char buf[512], *ptr;
   ssize_t len;
+  std::string result = "";
+
   // todo: ファイルが開けなかったときのエラー処理を入れる
   std::ofstream logData("chat.log");
 
@@ -166,6 +172,7 @@ void sendRecvLoop(int acc) {
       logData << "recv:EOF" << std::endl;
       break;
     }
+
     // 文字列化・表示
     buf[len] = '\0';
     ptr = strpbrk(buf, "\r\n");
@@ -185,6 +192,12 @@ void sendRecvLoop(int acc) {
     ***/
     mystrlcat(buf, ":OK\r\n", sizeof(buf));
     len = strlen(buf);
+
+    // APIをチェック。結果を string で返す
+    result = api(buf);
+    mystrlcat(buf, result.c_str(), sizeof(buf));
+    len = strlen(buf);
+
     // 応答
     len = send(acc, buf, len, 0);
     if (len == -1) {
@@ -195,6 +208,33 @@ void sendRecvLoop(int acc) {
     // サーバーの応答を記録
     logData << std::string(buf);
   }
+}
+
+std::string api(const char *name) {
+
+  std::string str = "";
+  std::string fileData = "";
+  // api ではない時
+  if (name[0] == '/') {
+    std::cerr << "APIが叩かれました" << std::endl;
+
+    std::ifstream logData("chat.log");
+    if (!logData) {
+      return "";
+    }
+
+    while (std::getline(logData, str)) {
+      fileData += str;
+      fileData += "\n";
+      //      std::cerr << "getline の結果 = " << str.c_str() << std::endl;
+    }
+
+    //    std::cerr << "filedata を出力します\n" << fileData << std::endl;
+
+    return fileData;
+  }
+
+  return "";
 }
 
 int main(int argc, char *argv[]) {
