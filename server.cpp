@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <fstream>
 #include <ostream>
+#include <string>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -144,10 +145,15 @@ size_t mystrlcat(char *dst, const char *src, size_t size) {
 void sendRecvLoop(int acc) {
   char buf[512], *ptr;
   ssize_t len;
+  // todo: ファイルが開けなかったときのエラー処理を入れる
   std::ofstream logData("chat.log");
 
   for (;;) {
     // 受信
+    /***
+        ブロッキングモードの場合
+        受信するまで recv は戻ってこないため、受信があるまでは関数が返らない
+     ***/
     len = recv(acc, buf, sizeof(buf), 0);
     if (len == -1) {
       // エラー
@@ -157,6 +163,7 @@ void sendRecvLoop(int acc) {
     if (len == 0) {
       // エンド・オブ・ファイル
       fprintf(stderr, "recv:EOF\n");
+      logData << "recv:EOF" << std::endl;
       break;
     }
     // 文字列化・表示
@@ -166,6 +173,9 @@ void sendRecvLoop(int acc) {
       *ptr = '\0';
     }
     fprintf(stderr, "[client]%s\n", buf);
+
+    // クライアントからの送信を記録
+    logData << "[client]" + std::string(buf) << std::endl;
 
     /***
         応答文字列作成
@@ -182,8 +192,8 @@ void sendRecvLoop(int acc) {
       perror("send");
       break;
     }
-    // ログに書き込み
-    logData << "ログファイルに書き込まれているかテストです" << std::endl;
+    // サーバーの応答を記録
+    logData << std::string(buf);
   }
 }
 
