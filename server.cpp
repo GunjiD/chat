@@ -2,6 +2,8 @@
 #include <asm-generic/socket.h>
 #include <cstddef>
 #include <cstdio>
+#include <fstream>
+#include <ostream>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -142,6 +144,8 @@ size_t mystrlcat(char *dst, const char *src, size_t size) {
 void sendRecvLoop(int acc) {
   char buf[512], *ptr;
   ssize_t len;
+  std::ofstream logData("chat.log");
+
   for (;;) {
     // 受信
     len = recv(acc, buf, sizeof(buf), 0);
@@ -178,6 +182,8 @@ void sendRecvLoop(int acc) {
       perror("send");
       break;
     }
+    // ログに書き込み
+    logData << "ログファイルに書き込まれているかテストです" << std::endl;
   }
 }
 
