@@ -46,17 +46,17 @@ int serverSocket(const char *portnm) {
   // アドレス情報の決定
   errcode = getaddrinfo(NULL, portnm, &hints, &res0);
   if (errcode != 0) {
-    fprintf(stderr, "getaddrinfo():%s\n", gai_strerror(errcode));
+    std::cerr << "getaddrinfo():" << gai_strerror(errcode) << std::endl;
     return -1;
   }
   errcode = getnameinfo(res0->ai_addr, res0->ai_addrlen, nbuf, sizeof(nbuf),
                         sbuf, sizeof(sbuf), NI_NUMERICHOST | NI_NUMERICSERV);
   if (errcode != 0) {
-    fprintf(stderr, "getnameinfo():%s\n", gai_strerror(errcode));
+    std::cerr << "getnameinfo():" << gai_strerror(errcode) << std::endl;
     freeaddrinfo(res0);
     return -1;
   }
-  fprintf(stderr, "port=%s\n", sbuf);
+  std::cerr << "port=" << sbuf << std::endl;
 
   // ソケットの生成
   soc = socket(res0->ai_family, res0->ai_socktype, res0->ai_protocol);
@@ -112,7 +112,7 @@ void acceptLoop(int soc) {
     } else {
       getnameinfo((struct sockaddr *)&from, len, hbuf, sizeof(hbuf), sbuf,
                   sizeof(sbuf), NI_NUMERICHOST | NI_NUMERICSERV);
-      fprintf(stderr, "accept:%s:%s\n", hbuf, sbuf);
+      std::cerr << "accept:" << hbuf << ":" << sbuf << std::endl;
       //送受信ループ
       sendRecvLoop(acc);
       // アクセプトソケットクローズ
@@ -168,7 +168,7 @@ void sendRecvLoop(int acc) {
     }
     if (len == 0) {
       // エンド・オブ・ファイル
-      fprintf(stderr, "recv:EOF\n");
+      std::cerr << "recv:EOF" << std::endl;
       logData << "recv:EOF" << std::endl;
       break;
     }
@@ -179,7 +179,7 @@ void sendRecvLoop(int acc) {
     if (ptr != nullptr) {
       *ptr = '\0';
     }
-    fprintf(stderr, "[client]%s\n", buf);
+    std::cerr << "[client]" << buf << std::endl;
 
     // クライアントからの送信を記録
     logData << "[client]" + std::string(buf) << std::endl;
@@ -212,24 +212,31 @@ void sendRecvLoop(int acc) {
 
 std::string api(const char *name) {
 
-  std::string str = "";
-  std::string fileData = "";
-  // api ではない時
-  if (name[0] == '/') {
-    std::cerr << "APIが叩かれました" << std::endl;
+  std::string str, fileData, tmp;
+  str = "";
+  fileData = "";
 
+  tmp = std::string(name);
+
+  // / が存在しない、かつ / が先頭にない場合は空文字を return する
+  if (tmp.find("/") != std::string::npos and tmp.find("/") != 0)
+    return "";
+
+  // todo: API 単位で分離するほうが良さそう
+  if (tmp.find("log") != std::string::npos) {
     std::ifstream logData("chat.log");
     if (!logData) {
       return "";
     }
 
+    fileData += "会話ログを表示します\n";
+
     while (std::getline(logData, str)) {
       fileData += str;
       fileData += "\n";
-      //      std::cerr << "getline の結果 = " << str.c_str() << std::endl;
     }
 
-    //    std::cerr << "filedata を出力します\n" << fileData << std::endl;
+    fileData += "会話ログの表示を終了します\n";
 
     return fileData;
   }
@@ -241,16 +248,16 @@ int main(int argc, char *argv[]) {
   int soc;
   // 引数にポート番号が指定されているか
   if (argc <= 1) {
-    fprintf(stderr, "server port\n");
+    std::cerr << "server port" << std::endl;
     return EX_USAGE;
   }
   // サーバーソケットの準備
   soc = serverSocket(argv[1]);
   if (soc == -1) {
-    fprintf(stderr, "serverSocket(%s):error\n", argv[1]);
+    std::cerr << "serverSocket(" << argv[1] << "):error" << std::endl;
     return EX_UNAVAILABLE;
   }
-  fprintf(stderr, "ready for accept\n");
+  std::cerr << "ready for accept" << std::endl;
   /***
       アクセプトループ
       Ctl + C などで割り込まない限りはループが止まらないので close しない
