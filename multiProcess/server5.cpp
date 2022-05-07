@@ -202,7 +202,7 @@ void sendRecvLoop(int acc) {
     }
     if (len == 0) {
       // エンド・オブ・ファイル
-      std::cerr << getpid() << "recv:EOF" << std::endl;
+      std::cerr << "<" << getpid() << ">recv:EOF" << std::endl;
       logData << "<" << getpid() << ">recv:EOF" << std::endl;
       break;
     }
@@ -214,9 +214,9 @@ void sendRecvLoop(int acc) {
       *ptr = '\0';
     }
     std::cerr << "<" << getpid() << ">[client]" << buf << std::endl;
-
     // クライアントからの送信を記録
     logData << "[client]" + std::string(buf) << std::endl;
+    logData << "<" << getpid() << ">[client]" << buf << std::endl;
 
     /***
         応答文字列作成
