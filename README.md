@@ -19,6 +19,19 @@
 - C++ だと std::thread が実装されているのでこれを使うのが良い
 - select() は一般的だが poll(), epoll() は Linux にしかないため Windows で動かすことができない
 
+i### thread
+
+#### mutex
+
+マルチスレッドでの排他処理で使われる.
+pthread_mutex_t で mutex の管理用変数を宣言する
+
+#### cond
+
+条件変数
+pthread_cond_t で cond の管理用変数を宣言する  
+todo: 平行並列処理の本を読んでおく  
+
 ## 参考資料  
 
 - ソケットプログラミングの流れ
