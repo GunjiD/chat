@@ -1,4 +1,6 @@
-#include "connection.h"
+#include "connection.hpp"
+#include <memory>
+#include <netdb.h>
 
 size_t connection::mystrlcat(char *dst, const char *src, size_t size) {
   const char *ps;
@@ -26,7 +28,8 @@ size_t connection::mystrlcat(char *dst, const char *src, size_t size) {
 
 int connection::open(const char *portnm) {
   char nbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
-  struct addrinfo hints, *res0;
+  struct addrinfo hints;
+  struct addrinfo *res0;
   int soc, opt, errcode;
   socklen_t opt_len;
 
@@ -38,7 +41,8 @@ int connection::open(const char *portnm) {
   hints.ai_flags = AI_PASSIVE;
 
   // アドレス情報の決定
-  errcode = getaddrinfo(NULL, portnm, &hints, &res0);
+  std::unique_ptr<addrinfo> res0_;
+  errcode = getaddrinfo(nullptr, portnm, &hints, &res0);
   if (errcode != 0) {
     std::cerr << "getaddrinfo():" << gai_strerror(errcode) << std::endl;
     return -1;

@@ -9,15 +9,17 @@
 #include <unistd.h>
 
 #include <iostream>
+#include <memory>
 
+// ソケットのオープン、クローズを行うクラス
 class connection {
 private:
-  int soc; // ソケットのディスクリプターを格納する
-
+  int m_soc; // ソケットのディスクリプターを格納する
+  int open(const char *port_num); // ソケットをオープンする
 public:
   // todo: コンストラクタでソケットを用意する。サーバーソケット
-  socket(const char *port_num) { soc = open(port_num); }
-  ~socket();
+  connection(const char *port_num) { m_soc = open(port_num); }
+  ~connection();
   size_t mystrlcat(char *dst, const char *src, size_t size);
-  int open(const char *portnm); // ソケットをオープンする
+  int get_soc() { return m_soc; }
 };
