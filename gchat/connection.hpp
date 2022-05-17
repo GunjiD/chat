@@ -18,8 +18,9 @@ private:
   int open(const char *port_num); // ソケットをオープンする
 public:
   // todo: コンストラクタでソケットを用意する。サーバーソケット
+  //       IP アドレスの設定を行えるようにする
   connection(const char *port_num) { m_soc = open(port_num); }
   ~connection();
-  size_t mystrlcat(char *dst, const char *src, size_t size);
+  static size_t mystrlcat(char *dst, const char *src, size_t size);
   int get_soc() { return m_soc; }
 };
