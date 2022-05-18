@@ -26,7 +26,7 @@ size_t connection::mystrlcat(char *dst, const char *src, size_t size) {
   return (dlen + (ps - src - 1));
 }
 
-int connection::open(const char *portnm) {
+int connection::open(const char *host_name, const char *port_num) {
   char nbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
   struct addrinfo hints;
   struct addrinfo *res0;
@@ -42,7 +42,7 @@ int connection::open(const char *portnm) {
 
   // アドレス情報の決定
   std::unique_ptr<addrinfo> res0_;
-  errcode = getaddrinfo(nullptr, portnm, &hints, &res0);
+  errcode = getaddrinfo(host_name, port_num, &hints, &res0);
   if (errcode != 0) {
     std::cerr << "getaddrinfo():" << gai_strerror(errcode) << std::endl;
     return -1;
