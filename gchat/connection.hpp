@@ -13,7 +13,7 @@
 
 // ソケットのオープン、クローズを行うクラス
 class connection {
-private:
+protected:
   int m_soc; // ソケットのディスクリプターを格納する
   int open(const char *host_name,
            const char *port_num); // ソケットをオープンする
@@ -23,7 +23,7 @@ public:
   connection(const char *host_name, const char *port_num) {
     m_soc = open(host_name, port_num);
   }
-  ~connection();
+  virtual ~connection() { close(m_soc); }
   static size_t mystrlcat(char *dst, const char *src, size_t size);
   int get_soc() { return m_soc; }
 };
